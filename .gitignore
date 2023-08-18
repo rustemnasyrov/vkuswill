@@ -1,0 +1,7 @@
+/.DS_Store
+/.venv
+/.vscode
+/leto.zip
+leto/leto/__pycache__
+leto/zone_locker/__pycache__
+leto/zone_locker/view/__pycache__
