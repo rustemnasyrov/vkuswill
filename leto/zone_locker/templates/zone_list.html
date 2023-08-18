@@ -48,29 +48,13 @@
     method: 'POST',
     data: {
       locked: locked,
-      lock_time: lockTime
+      lock_time: lockTime,
+      locked_by: browserId
     },
     success: function(response) {
       console.log(response);
       var btn = form.find('.lock-btn');
-      if (btn.hasClass('locked')) {
-        // кнопка заблокирована, проверяем, кем
-        if (response.locked_by === '{{ current_user.id }}') {
-          // кнопку заблокировал текущий пользователь, разблокируем
-          btn.removeClass('locked');
-          btn.addClass('unlocked');
-          btn.removeClass('btn-danger');
-          btn.addClass('btn-success');
-        } else {
-          // кнопку заблокировал другой пользователь, ничего не делаем
-        }
-      } else {
-        // кнопка разблокирована, просто меняем её состояние
-        btn.toggleClass('unlocked', !locked);
-        btn.toggleClass('btn-success', !locked);
-        btn.toggleClass('locked', locked);
-        btn.toggleClass('btn-danger', locked);
-      }
+      updateLockStatus(btn, response)
     },
     error: function(xhr, status, error) {
       console.error(error);
@@ -78,8 +62,18 @@
   });
 });
 
+function updateLockStatus(btn, response) {
+  console.log("Btn = " + btn)
+  locked = response.locked
+  is_owner = response.locked_by == browserId;
+  btn.toggleClass('locked', locked);
+  btn.toggleClass('unlocked', !locked);
+  btn.toggleClass('btn-danger', locked && !is_owner);
+  btn.toggleClass('btn-warning', locked && is_owner);
+  btn.toggleClass('btn-success', !locked);
+}
 
-      // обновление состояния кнопок каждые 5 секунд
+  // обновление состояния кнопок каждые 5 секунд
   setInterval(function() {
     $.ajax({
       url: '/zone/list/',
@@ -96,11 +90,7 @@
           if (zoneData) {
             var locked = zoneData.locked;
             var btn = form.find('.lock-btn');
-            btn.toggleClass('locked', locked);
-            btn.toggleClass('unlocked', !locked);
-            btn.toggleClass('btn-danger', locked);
-            btn.toggleClass('btn-success', !locked);
-            
+            updateLockStatus(btn, zoneData);
           }
         });
       },
