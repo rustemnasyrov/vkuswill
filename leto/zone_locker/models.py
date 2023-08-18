@@ -20,6 +20,10 @@ class Zone(models.Model):
         self.locked = False
         self.lock_time = None
         self.save()
+    
+    @classmethod    
+    def has_zones_locked_by(cls, owner_id):
+        return cls.objects.filter(owner=owner_id).exists()
 
     def __str__(self):
         lock_str = (">> locked <<" if self.locked == True else '')

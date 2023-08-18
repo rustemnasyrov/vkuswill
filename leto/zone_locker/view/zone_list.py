@@ -28,20 +28,31 @@ def zone_lock(request, pk):
     if request.method == 'POST':
         locked = request.POST.get('locked')
         lock_time = request.POST.get('lock_time')
+        locked_by = request.POST.get('locked_by')
 
         if locked == 'true':
-            zone.locked = True
-            zone.lock_time = lock_time
+            if not zone.locked and not Zone.has_zones_locked_by(locked_by):
+                zone.locked = True
+                zone.lock_time = lock_time
+                zone.owner = locked_by
         else:
-            zone.locked = False
-            zone.lock_time = None
+            unlock = (zone.owner == locked_by)
+            if unlock:
+                zone.locked = False
+                zone.lock_time = None
+                zone.owner = None
 
         zone.save()
 
         # Разблокируем блокировку
         lock.release()
 
-        return JsonResponse({'status': 'ok'})
+        return JsonResponse({
+            'status': 'ok',
+            "id": zone.id,
+            #"name": zone.name,
+            "locked": zone.locked,
+            "locked_by": zone.owner})
     else:
         # Разблокируем блокировку
         lock.release()
@@ -63,7 +74,8 @@ def zone_list(request):
         zones_data.append({
             "id": zone.id,
             #"name": zone.name,
-            "locked": zone.locked
+            "locked": zone.locked,
+            "locked_by": zone.owner
         })
 
     # Отправляем JSON-объект с данными о зонах в ответе сервера
