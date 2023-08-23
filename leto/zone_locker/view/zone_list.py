@@ -14,7 +14,6 @@ class ZoneListView(ListView):
     context_object_name = 'zones'
     ordering = 'number' # добавленный атрибут
 
-
 # Создаем объект блокировки
 lock = threading.Lock()
 
@@ -47,12 +46,7 @@ def zone_lock(request, pk):
         # Разблокируем блокировку
         lock.release()
 
-        return JsonResponse({
-            'status': 'ok',
-            "id": zone.id,
-            #"name": zone.name,
-            "locked": zone.locked,
-            "locked_by": zone.owner})
+        return JsonResponse(zone.response_params().append({'status': 'ok'}))
     else:
         # Разблокируем блокировку
         lock.release()
@@ -71,12 +65,7 @@ def zone_list(request):
     # Преобразуем объекты модели в словари
     zones_data = []
     for zone in zones:
-        zones_data.append({
-            "id": zone.id,
-            #"name": zone.name,
-            "locked": zone.locked,
-            "locked_by": zone.owner
-        })
+        zones_data.append(zone.response_params())
 
     # Отправляем JSON-объект с данными о зонах в ответе сервера
 

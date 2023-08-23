@@ -1,3 +1,4 @@
+import datetime
 from django.db import models
 
 # Create your models here.
@@ -20,12 +21,34 @@ class Zone(models.Model):
         self.locked = False
         self.lock_time = None
         self.save()
+        
+    def time_remind(self):
+        if self.lock_time:
+            delta = timezone.now() - self.lock_time
+            t_30 = datetime.timedelta(minutes=30)
+            return max(t_30-delta, datetime.timedelta(minutes=0))
+        return datetime.timedelta(minutes=0)
+    
+    def time_reminder_str(self):
+        minutes, seconds = divmod(self.time_remind().total_seconds(), 60)
+        return f"{int(minutes):02}:{int(seconds):02}"
+
+    def response_params(self):
+        return {"id": self.id,
+            "text": self.__str__(),
+            "name": self.description,
+            "locked": self.locked,
+            "locked_by": self.owner,
+            "time_remind": self.time_reminder_str()};
     
     @classmethod    
     def has_zones_locked_by(cls, owner_id):
         return cls.objects.filter(owner=owner_id).exists()
 
     def __str__(self):
-        lock_str = (">> locked <<" if self.locked == True else '')
-        return f"{self.number} - {self.description}"
+        if self.locked:
+            reminder_str = self.time_reminder_str()
+        else:
+            reminder_str = ""
+        return f"{self.number} - {self.description} {reminder_str}"
 

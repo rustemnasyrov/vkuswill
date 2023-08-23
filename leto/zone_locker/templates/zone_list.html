@@ -17,7 +17,7 @@
       <form class="zone-lock-form list-group-item" data-zone-id="{{ zone.id }}">
         <button type="button" class="lock-btn btn {% if zone.locked %}btn-danger{% else %}btn-success{% endif %} btn-block"
         style = "font-size:350%">
-          {{ zone }}
+          {{ zone }} 
         </button>
       </form>
     {% empty %}
@@ -32,6 +32,7 @@
   console.log(browserId);
 
     $(document).ready(function() {
+      updateButtonsState();
       $('.zone-lock-form').click(function() {
   var form = $(this);
   var zoneId = form.data('zone-id');
@@ -71,34 +72,36 @@ function updateLockStatus(btn, response) {
   btn.toggleClass('btn-danger', locked && !is_owner);
   btn.toggleClass('btn-warning', locked && is_owner);
   btn.toggleClass('btn-success', !locked);
+  btn.text(response.text);
 }
 
-  // обновление состояния кнопок каждые 5 секунд
-  setInterval(function() {
-    $.ajax({
-      url: '/zone/list/',
-      method: 'GET',
-      success: function(response) {
-        console.log(response);
-        // перебираем все формы и обновляем состояние кнопок
-        $('.zone-lock-form').each(function() {
-          var form = $(this);
-          var zoneId = form.data('zone-id');
-          var zoneData = response.zones.find(function(zone) {
-            return zone.id === zoneId;
-          });
-          if (zoneData) {
-            var locked = zoneData.locked;
-            var btn = form.find('.lock-btn');
-            updateLockStatus(btn, zoneData);
-          }
+function updateButtonsState() {
+  $.ajax({
+    url: '/zone/list/',
+    method: 'GET',
+    success: function(response) {
+      console.log(response);
+      // перебираем все формы и обновляем состояние кнопок
+      $('.zone-lock-form').each(function() {
+        var form = $(this);
+        var zoneId = form.data('zone-id');
+        var zoneData = response.zones.find(function(zone) {
+          return zone.id === zoneId;
         });
-      },
-      error: function(xhr, status, error) {
-        console.error(error);
-      }
-    });
-  }, 2000); // 5 секунд
+        if (zoneData) {
+          var locked = zoneData.locked;
+          var btn = form.find('.lock-btn');
+          updateLockStatus(btn, zoneData);
+        }
+      });
+    },
+    error: function(xhr, status, error) {
+      console.error(error);
+    }
+  });
+}
+  // обновление состояния кнопок каждые 5 секунд
+  setInterval(updateButtonsState, 1000); // 5 секунд
 
     });
 
