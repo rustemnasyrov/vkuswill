@@ -58,7 +58,9 @@ def zone_lock(request, pk):
 def zone_list(request):
     # Блокируем блокировку
     lock.acquire()
-
+    
+    Zone.update_locks()
+    
     # Здесь должна быть логика получения данных о состоянии зон из базы данных или другого источника
     zones = Zone.objects.all()
 
